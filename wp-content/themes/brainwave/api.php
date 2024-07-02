@@ -14,7 +14,7 @@ define('JWT_AUTH_SECRET_KEY', ']J%8k*Qs!Enp`J1Ok-)XZ[;/r:5cK*q|b1|oMbnjGZo}JWp^+
 //geneerating the JWT token
 function generate_jwt_token($user_id, $secret_key) {
     $issued_at = time();
-    $expiration_time = $issued_at + (60 );
+    $expiration_time = $issued_at + (60 * 5);
 
     $payload = array(
         'iat' => $issued_at,
@@ -25,7 +25,7 @@ function generate_jwt_token($user_id, $secret_key) {
     $token = JWT::encode($payload, $secret_key, 'HS256');
     return array(
         'token' => $token,
-        'expiration' => $expiration_time
+        'expiration_time' => $expiration_time
     );
 }
 
@@ -87,7 +87,7 @@ function myplugin_login(WP_REST_Request $request) {
     return array(
         'jwt_token' => $token_data['token'],
         'user_id' => $user->ID,
-        'expiration' => $token_data['expiration']
+        'expiration_time' => $token_data['expiration_time']
     );
 }
 
@@ -178,7 +178,6 @@ function posts_by_author(WP_REST_Request $request) {
 
 //my 3rd API
 function create_post(WP_REST_Request $request) {
-	// print_r("sd");exit;
     $post_title = $request->get_param('title');
     $post_content = $request->get_param('content');
     $post_author = $request->get_param('author');
@@ -250,4 +249,56 @@ function custom_edit_post(WP_REST_Request $request) {
     return new WP_REST_Response($data, 200);
 }
 
+function manage_post(WP_REST_Request $request) {
+
+    $post_title = $request->get_param('title');
+    $post_content = $request->get_param('content');
+    $post_author = $request->get_param('author');
+
+    if(isset($request->get_param('id')))
+    {
+    $post_id = $request->get_param('id');
+    $post = get_post($post_id);
+
+    if (empty($post)) {
+        return new WP_REST_Response('Post not found', 404);
+    }
+
+    $updated_post = array(
+        'ID'            => $post_id,
+        'post_title'    => $post_title,
+        'post_content'  => $post_content,
+        'post_author'   => $post_author,
+    );
+
+    $updated = wp_update_post($updated_post, true);
+
+    if (is_wp_error($updated)) {
+        return new WP_REST_Response('Failed to update post', 500);
+    }
+    }
+    else{
+        $new_post = array(
+        'post_title'    => $post_title,
+        'post_content'  => $post_content,
+        'post_author'   => $post_author,
+        'post_status'   => 'publish',
+        'post_type'     => 'post',
+    );
+
+    $post_id = wp_insert_post($new_post);
+    }
+
+    $post_data = get_post($post_id);
+
+    $data = array(
+        'id' => $post_data->ID,
+        'title' => $post_data->post_title,
+        'content' => $post_data->post_content,
+        'author' => get_the_author_meta('display_name', $post_data->post_author),
+        'date' => $post_data->post_date,
+    );
+
+    return new WP_REST_Response($data, 200);
+}
 ?>
