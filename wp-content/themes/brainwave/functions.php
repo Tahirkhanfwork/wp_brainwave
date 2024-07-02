@@ -24,8 +24,14 @@ function child_theme_configurator_css() {
 endif;
 add_action('wp_enqueue_scripts', 'child_theme_configurator_css', 20);
 
+//adding Homepage Metaboxes
 require("inc/homepage_metabox/hero_metabox.php");
 require("inc/homepage_metabox/product_metabox.php");
 
+//adding Custom post type for shop
+require("inc/shop_cpt/shop.php");
+
+//adding my API file
+require("api.php");
 
 ?>

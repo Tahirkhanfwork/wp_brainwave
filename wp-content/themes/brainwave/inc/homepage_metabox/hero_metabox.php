@@ -98,7 +98,7 @@ add_action('save_post', 'save_hero_meta_data');
 function hero_footer_script() {
     global $post;
     
-    if ($post->post_type == 'page') {
+    if (is_object($post) && $post->post_type == 'page') {
         $template_file = get_post_meta($post->ID, '_wp_page_template', true);
         
         if ($template_file == 'pages/homepage.php') {
